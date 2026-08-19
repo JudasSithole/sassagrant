@@ -133,7 +133,7 @@ fun OnboardingFlow(
         )
     )
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(hasRequestedPermissions) {
         if (hasRequestedPermissions) {
             onOnboardingComplete()
         }
@@ -304,9 +304,7 @@ fun PermissionScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+            .fillMaxWidth()
     ) {
         Text(
             text = "Permissions Required",
@@ -405,7 +403,7 @@ fun PermissionCard(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = title,
