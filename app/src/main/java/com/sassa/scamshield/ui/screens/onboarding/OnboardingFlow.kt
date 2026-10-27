@@ -1,13 +1,7 @@
 package com.sassa.scamshield.ui.screens.onboarding
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
-import android.provider.Settings
-import android.telecom.TelecomManager
-import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
@@ -15,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,6 +32,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -65,7 +59,7 @@ import com.sassa.scamshield.ui.theme.TextSecondary
 
 data class OnboardingPage(
     val title: String,
-    val description: String
+    val description: String,
 )
 
 val onboardingPages = listOf(
@@ -99,15 +93,13 @@ fun OnboardingFlow(
     onOnboardingComplete: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val (currentPage, setCurrentPage) = rememberSaveable { mutableStateOf(0) }
+    val (currentPage, setCurrentPage) = rememberSaveable { mutableIntStateOf(0) }
     val (hasRequestedPermissions, setHasRequestedPermissions) = rememberSaveable { mutableStateOf(false) }
     val (showPermissionScreen, setShowPermissionScreen) = remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
-
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
+    ) { _ ->
         setHasRequestedPermissions(true)
     }
 
@@ -122,13 +114,13 @@ fun OnboardingFlow(
         PermissionItem(
             title = "SMS Messages",
             description = "Allows us to scan incoming messages for scam patterns",
-            icon = androidx.compose.material.icons.Icons.Outlined.Email,
+            icon = Icons.Outlined.Email,
             permission = Manifest.permission.READ_SMS
         ),
         PermissionItem(
             title = "Phone Calls",
             description = "Identifies suspicious numbers before you answer",
-            icon = androidx.compose.material.icons.Icons.Outlined.Call,
+            icon = Icons.Outlined.Call,
             permission = Manifest.permission.READ_CALL_LOG
         )
     )
@@ -159,7 +151,7 @@ fun OnboardingFlow(
                 allPermissions = allPermissions,
                 onPermissionsRequested = { setHasRequestedPermissions(true) },
                 onPermissionLauncher = { permissionLauncher.launch(allPermissions.toTypedArray()) },
-                onSkip = { onOnboardingComplete() }
+                onSkip = onOnboardingComplete
             )
         } else {
             OnboardingContent(
@@ -293,7 +285,7 @@ fun PermissionScreen(
     }
 
     LaunchedEffect(Unit) {
-        val initiallyGranted = allPermissions.filter { checkPermission(it) }.toSet()
+        val initiallyGranted = allPermissions.asSequence().filter(checkPermission).toSet()
         setGrantedPermissions(initiallyGranted)
         if (initiallyGranted.size == allPermissions.size) {
             onPermissionsRequested()
